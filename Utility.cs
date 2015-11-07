@@ -74,12 +74,20 @@ namespace LeagueSharp.Common
                 return false;
             }
 
+            var @base = unit as Obj_AI_Base;
+            if (@base != null)
+            {
+                if (@base.HasBuff("kindredrnodeathbuff") && @base.HealthPercent <= 10)
+                {
+                    return false;
+                }
+            }
+
             if (checkTeam && unit.Team == ObjectManager.Player.Team)
             {
                 return false;
             }
 
-            var @base = unit as Obj_AI_Base;
             var unitPosition = @base != null ? @base.ServerPosition : unit.Position;
 
             return !(range < float.MaxValue) ||
@@ -123,6 +131,15 @@ namespace LeagueSharp.Common
         public static bool IsValidSlot(this InventorySlot slot)
         {
             return slot != null && slot.SpellSlot != SpellSlot.Unknown;
+        }
+
+        /// <summary>
+        /// Returns the unit's ability power
+        /// </summary>
+        /// 
+        public static float AbilityPower(this Obj_AI_Base @base)
+        {
+            return @base.FlatMagicDamageMod + (@base.PercentMagicDamageMod * @base.FlatMagicDamageMod);
         }
 
         /// <summary>
