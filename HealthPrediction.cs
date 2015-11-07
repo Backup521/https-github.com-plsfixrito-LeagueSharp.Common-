@@ -35,14 +35,8 @@ namespace LeagueSharp.Common
     /// </summary>
     public class HealthPrediction
     {
-        /// <summary>
-        /// The active attacks
-        /// </summary>
         private static readonly Dictionary<int, PredictedDamage> ActiveAttacks = new Dictionary<int, PredictedDamage>();
 
-        /// <summary>
-        /// Initializes static members of the <see cref="HealthPrediction"/> class. 
-        /// </summary>
         static HealthPrediction()
         {
             Obj_AI_Base.OnProcessSpellCast += ObjAiBaseOnOnProcessSpellCast;
@@ -52,11 +46,6 @@ namespace LeagueSharp.Common
             Obj_AI_Base.OnDoCast += Obj_AI_Base_OnDoCast;
         }
 
-        /// <summary>
-        /// Fired when a unit does an auto attack.
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="args">The <see cref="GameObjectProcessSpellCastEventArgs"/> instance containing the event data.</param>
         private static void Obj_AI_Base_OnDoCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
             if (ActiveAttacks.ContainsKey(sender.NetworkId) && sender.IsMelee)
@@ -65,11 +54,6 @@ namespace LeagueSharp.Common
             }
         }
 
-        /// <summary>
-        /// Fired when a <see cref="MissileClient"/> is deleted from the game.
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="args">The <see cref="EventArgs"/> instance containing the event data.</param>
         static void MissileClient_OnDelete(GameObject sender, EventArgs args)
         {
             var missile = sender as MissileClient;
@@ -86,10 +70,6 @@ namespace LeagueSharp.Common
             }
         }
 
-        /// <summary>
-        /// Fired when the game is updated.
-        /// </summary>
-        /// <param name="args">The <see cref="EventArgs"/> instance containing the event data.</param>
         private static void Game_OnGameUpdate(EventArgs args)
         {
             ActiveAttacks.ToList()
@@ -98,11 +78,6 @@ namespace LeagueSharp.Common
                 .ForEach(pair => ActiveAttacks.Remove(pair.Key));
         }
 
-        /// <summary>
-        /// Fired when the spellbooks stops a cast.
-        /// </summary>
-        /// <param name="spellbook">The spellbook.</param>
-        /// <param name="args">The <see cref="SpellbookStopCastEventArgs"/> instance containing the event data.</param>
         private static void SpellbookOnStopCast(Spellbook spellbook, SpellbookStopCastEventArgs args)
         {
             if (spellbook.Owner.IsValid && args.StopAnimation)
@@ -114,11 +89,6 @@ namespace LeagueSharp.Common
             }
         }
 
-        /// <summary>
-        /// Fired when the game processes a spell cast.
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="args">The <see cref="GameObjectProcessSpellCastEventArgs"/> instance containing the event data.</param>
         private static void ObjAiBaseOnOnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
             if (!sender.IsValidTarget(3000, false) || sender.Team != ObjectManager.Player.Team || sender is Obj_AI_Hero
@@ -142,12 +112,8 @@ namespace LeagueSharp.Common
         }
 
         /// <summary>
-        /// Returns the unit health after a set time milliseconds.
+        /// Returns the unit health after a set time milliseconds. 
         /// </summary>
-        /// <param name="unit">The unit.</param>
-        /// <param name="time">The time.</param>
-        /// <param name="delay">The delay.</param>
-        /// <returns></returns>
         public static float GetHealthPrediction(Obj_AI_Base unit, int time, int delay = 70)
         {
             var predictedDamage = 0f;
@@ -163,7 +129,7 @@ namespace LeagueSharp.Common
 
                     if (/*Utils.GameTimeTickCount < landTime - delay &&*/ landTime < Utils.GameTimeTickCount + time)
                     {
-                        attackDamage = attack.Damage;
+                        attackDamage = attack.Damage - 10f;
                     }
                 }
 
@@ -174,12 +140,8 @@ namespace LeagueSharp.Common
         }
 
         /// <summary>
-        /// Returns the unit health after time milliseconds assuming that the past auto-attacks are periodic.
+        /// Returns the unit health after time milliseconds assuming that the past auto-attacks are periodic. 
         /// </summary>
-        /// <param name="unit">The unit.</param>
-        /// <param name="time">The time.</param>
-        /// <param name="delay">The delay.</param>
-        /// <returns></returns>
         public static float LaneClearHealthPrediction(Obj_AI_Base unit, int time, int delay = 70)
         {
             var predictedDamage = 0f;
@@ -204,98 +166,29 @@ namespace LeagueSharp.Common
                         fromT += (int) attack.AnimationTime;
                     }
                 }
-                predictedDamage += n * attack.Damage;
+                predictedDamage += n * (attack.Damage - 10f);
             }
 
             return unit.Health - predictedDamage;
         }
 
-        /// <summary>
-        /// Determines whether the specified minion has minion aggro.
-        /// </summary>
-        /// <param name="minion">The minion.</param>
-        /// <returns></returns>
         public static bool HasMinionAggro(Obj_AI_Minion minion)
         {
             return ActiveAttacks.Values.Any(m => (m.Source is Obj_AI_Minion) && m.Target == minion);
         }
 
-        /// <summary>
-        /// Represetns predicted damage.
-        /// </summary>
         private class PredictedDamage
         {
-            /// <summary>
-            /// The animation time
-            /// </summary>
             public readonly float AnimationTime;
 
-            /// <summary>
-            /// Gets or sets the damage.
-            /// </summary>
-            /// <value>
-            /// The damage.
-            /// </value>
             public float Damage { get; private set; }
-
-            /// <summary>
-            /// Gets or sets the delay.
-            /// </summary>
-            /// <value>
-            /// The delay.
-            /// </value>
             public float Delay { get; private set; }
-
-            /// <summary>
-            /// Gets or sets the projectile speed.
-            /// </summary>
-            /// <value>
-            /// The projectile speed.
-            /// </value>
             public int ProjectileSpeed { get; private set; }
-
-            /// <summary>
-            /// Gets or sets the source.
-            /// </summary>
-            /// <value>
-            /// The source.
-            /// </value>
             public Obj_AI_Base Source { get; private set; }
-
-            /// <summary>
-            /// Gets or sets the start tick.
-            /// </summary>
-            /// <value>
-            /// The start tick.
-            /// </value>
             public int StartTick { get; internal set; }
-
-            /// <summary>
-            /// Gets or sets the target.
-            /// </summary>
-            /// <value>
-            /// The target.
-            /// </value>
             public Obj_AI_Base Target { get; private set; }
-
-            /// <summary>
-            /// Gets or sets a value indicating whether this <see cref="PredictedDamage"/> is processed.
-            /// </summary>
-            /// <value>
-            ///   <c>true</c> if processed; otherwise, <c>false</c>.
-            /// </value>
             public bool Processed { get; internal set; }
 
-            /// <summary>
-            /// Initializes a new instance of the <see cref="PredictedDamage"/> class.
-            /// </summary>
-            /// <param name="source">The source.</param>
-            /// <param name="target">The target.</param>
-            /// <param name="startTick">The start tick.</param>
-            /// <param name="delay">The delay.</param>
-            /// <param name="animationTime">The animation time.</param>
-            /// <param name="projectileSpeed">The projectile speed.</param>
-            /// <param name="damage">The damage.</param>
             public PredictedDamage(Obj_AI_Base source,
                 Obj_AI_Base target,
                 int startTick,
